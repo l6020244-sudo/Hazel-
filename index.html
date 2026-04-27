@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Untitled</title>
+    
+
+  </head>
+    
+  <body>
+  <!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta property="og:title" content="纠结打分器 - 拒绝内耗">
+    <meta property="og:description" content="量化你的选择，打败你的内耗。Hazel 和 Gemini 肘的。">
+    <meta property="og:image" content="这里可以放一张你打分器生成的精美截图地址">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>纠结打分器 - Pop UI 终极排版修正版</title>
+    
+    <!-- 引入 Google Fonts: Fredoka(大标题), Inter(正文) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;900&family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 引入 Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- 配置 Tailwind 主题：注入 Neo-brutalism 硬阴影与自定义动画 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        bgBase: '#F4F5F0', // 偏暖的浅灰纸张底色
+                    },
+                    boxShadow: {
+                        // 强化版纯黑硬阴影
+                        'neo-xl': '12px 12px 0px 0px rgba(0,0,0,1)',
+                        'neo-lg': '8px 8px 0px 0px rgba(0,0,0,1)',
+                        'neo': '4px 4px 0px 0px rgba(0,0,0,1)',
+                        'neo-sm': '2px 2px 0px 0px rgba(0,0,0,1)',
+                    },
+                    animation: {
+                        'float-alien': 'float 2s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-15px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 隐藏数字输入框的默认上下箭头 */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        /* 全局选中文字的荧光色效果 */
+        ::selection {
+            background-color: #bef264; /* lime-300 */
+            color: #000;
+        }
+    </style>
+</head>
+<body class="bg-bgBase text-black font-inter antialiased min-h-screen p-6 md:p-10 overflow-x-hidden">
+
+    <div class="max-w-[1400px] mx-auto relative">
+        
+        <!-- ==========================================
+             1. 顶部 Header
+             ========================================== -->
+        <header class="relative w-full h-[200px] mb-8 hidden lg:block">
+            <div class="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-4 group z-20">
+                <div class="w-20 h-36 rounded-full border-[4px] border-black shadow-neo bg-[#CCFF00] flex items-center justify-center text-5xl transition-all duration-300 ease-out cursor-pointer group-hover:scale-90 hover:!scale-110 hover:z-10 active:!scale-95">🤯</div>
+                <div class="w-36 h-36 rounded-full border-[4px] border-black shadow-neo bg-[#FF3366] flex items-center justify-center text-7xl transition-all duration-300 ease-out cursor-pointer group-hover:scale-90 hover:!scale-110 hover:z-10 active:!scale-95">🤔</div>
+                <div class="w-20 h-36 rounded-full border-[4px] border-black shadow-neo bg-[#00FFFF] flex items-center justify-center text-5xl transition-all duration-300 ease-out cursor-pointer group-hover:scale-90 hover:!scale-110 hover:z-10 active:!scale-95">🥰</div>
+            </div>
+
+            <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 w-max">
+                <div class="relative">
+                    <h1 class="font-fredoka text-[7.5rem] leading-none font-black text-black tracking-tight uppercase relative z-10">
+                        纠结<span class="text-indigo-600">打分器</span>
+                    </h1>
+                    <div class="absolute -top-[-12px] -right-[250px] bg-lime-400 text-black border-[6px] border-black rounded-full px-8 py-3 text-2xl font-black shadow-neo -rotate-6 transform hover:rotate-0 transition-transform cursor-default whitespace-nowrap z-20">
+                        治愈困难症! 💡
+                    </div>
+                    <div class="absolute -bottom-20 -right-[230px] flex gap-4 z-20">
+                        <button class="btn-reset px-6 py-3 bg-white text-black border-4 border-black rounded-full text-base font-black shadow-neo hover:translate-y-1 hover:shadow-neo-sm transition-all flex items-center gap-2 uppercase whitespace-nowrap">
+                            <span class="text-xl">🔄</span> 重置
+                        </button>
+                        <button id="btn-share" class="px-6 py-3 bg-yellow-300 text-black border-4 border-black rounded-full text-base font-black shadow-neo hover:translate-y-1 hover:shadow-neo-sm transition-all flex items-center gap-2 uppercase whitespace-nowrap">
+                            <span class="text-xl">🔗</span> 分享
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-6 flex items-center justify-center gap-3 border-b-4 border-black pb-2 px-4">
+                    <p class="text-2xl font-black text-gray-800 uppercase tracking-widest">量化你的选择 / 打败你的内耗</p>
+                    <span class="text-4xl animate-float-alien block">👾</span>
+                </div>
+            </div>
+
+            <div class="absolute right-4 top-1/2 -translate-y-1/2 z-20">
+                <div class="w-20 h-36 rounded-full border-[4px] border-black shadow-neo bg-[#B026FF] flex items-center justify-center text-5xl transition-all duration-300 ease-out cursor-pointer hover:scale-110 active:scale-95">🦄</div>
+            </div>
+        </header>
+
+        <!-- 移动端 Header 降级显示 -->
+        <header class="lg:hidden mb-10 flex flex-col items-center gap-6">
+            <h1 class="font-fredoka text-6xl font-black text-black tracking-tight uppercase text-center">
+                纠结<span class="text-indigo-600">打分器</span>
+            </h1>
+            <div class="flex gap-4">
+                <button class="btn-reset px-6 py-2.5 bg-white border-4 border-black rounded-full font-black shadow-neo">🔄 重置</button>
+                <button class="px-6 py-2.5 bg-yellow-300 border-4 border-black rounded-full font-black shadow-neo">✨ 分享</button>
+            </div>
+        </header>
+
+        <!-- ==========================================
+             2. 强制底部水平对齐 (items-stretch)
+             ========================================== -->
+        <main class="flex flex-col lg:flex-row gap-20 items-stretch">
+            
+            <!-- 左侧：场景与打分输入区 -->
+            <div class="w-full lg:w-[45%] flex flex-col gap-12">
+                
+                <!-- 模块 1：场景选择 -->
+                <div>
+                    <h2 class="font-fredoka text-4xl font-black mb-5 tracking-wide uppercase">
+                        <span class="text-black">01.</span> <span class="text-orange-500">SCENE</span> 场景
+                    </h2>
+                    <div class="bg-white border-4 border-black rounded-3xl shadow-neo-lg p-7">
+                        <div class="flex flex-wrap gap-4" id="scene-buttons-container">
+                            <button id="btn-scene-1" data-scene="1" class="scene-btn px-5 py-2.5 text-black border-2 border-black rounded-2xl text-base transition-all bg-pink-400 font-black shadow-neo transform -translate-y-1">情绪消费</button>
+                            <button id="btn-scene-2" data-scene="2" class="scene-btn px-5 py-2.5 text-black border-2 border-black rounded-2xl text-base transition-all bg-gray-100 font-bold hover:bg-blue-400 hover:shadow-neo hover:-translate-y-1">硬核消费</button>
+                            <button id="btn-scene-3" data-scene="3" class="scene-btn px-5 py-2.5 text-black border-2 border-black rounded-2xl text-base transition-all bg-gray-100 font-bold hover:bg-emerald-400 hover:shadow-neo hover:-translate-y-1">时间投资</button>
+                        </div>
+                        <p id="scene-explanation" class="mt-4 text-sm font-bold text-gray-700 italic"></p>
+                    </div>
+                </div>
+
+                <!-- 模块 2：权重与打分 -->
+                <div class="flex-1 flex flex-col">
+                    <h2 class="font-fredoka text-4xl font-black mb-5 tracking-wide uppercase">
+                        <span class="text-black">02.</span> <span class="text-pink-500">SCORE</span> 打分
+                    </h2>
+                    <div class="bg-white border-4 border-black rounded-3xl shadow-neo-lg p-7 flex-1 flex flex-col">
+                        
+                        <div class="flex justify-end items-center mb-6">
+                            <div id="weight-total-label" class="text-sm font-black px-3 py-1.5 bg-lime-400 text-black border-2 border-black rounded-xl shadow-neo rotate-2 transition-colors">权重总和: 100%</div>
+                        </div>
+
+                        <!-- 表头与添加选项占位符 -->
+                        <div class="flex gap-3 mb-5 pb-4 border-b-4 border-black text-sm font-black text-center items-end uppercase">
+                            <div class="w-20 text-left pb-1 shrink-0">评估维度</div>
+                            <div class="w-16 pb-1 shrink-0">权重(%)</div>
+                            <div class="flex-1">
+                                <div class="mb-2 bg-black text-white py-1 rounded-lg text-xs border-2 border-black">选项 A</div>
+                                <input type="text" id="name-a" placeholder="如: 戴森" class="input-option-name w-full text-center bg-gray-100 border-2 border-black rounded-xl py-2 focus:outline-none focus:bg-purple-50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 transition-all font-bold">
+                            </div>
+                            <div class="flex-1">
+                                <div class="mb-2 bg-black text-white py-1 rounded-lg text-xs border-2 border-black">选项 B</div>
+                                <input type="text" id="name-b" placeholder="如: 徕芬" class="input-option-name w-full text-center bg-gray-100 border-2 border-black rounded-xl py-2 focus:outline-none focus:bg-purple-50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 transition-all font-bold">
+                            </div>
+                            <div class="flex-1 hidden option-c-col">
+                                <div class="mb-2 bg-black text-white py-1 rounded-lg text-xs border-2 border-black">选项 C</div>
+                                <input type="text" id="name-c" placeholder="如: 追觅" class="input-option-name w-full text-center bg-gray-100 border-2 border-black rounded-xl py-2 focus:outline-none focus:bg-purple-50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 transition-all font-bold">
+                            </div>
+                            <div class="w-10 shrink-0 flex flex-col justify-end">
+                                <button id="btn-toggle-c" class="w-full h-[42px] border-2 border-dashed border-gray-400 rounded-xl flex items-center justify-center text-gray-400 hover:border-black hover:text-black hover:bg-lime-300 hover:shadow-neo-sm transition-all" title="添加/移除选项">
+                                    <svg id="icon-plus" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
+                                    <svg id="icon-minus" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M20 12H4"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 输入行区域 -->
+                        <div class="flex flex-col gap-4" id="dimensions-container">
+                            <div class="flex gap-3 items-center dimension-row">
+                                <div class="label-dimension w-20 text-sm font-black text-black shrink-0">视觉吸引力</div>
+                                <div class="w-16 shrink-0"><input type="number" value="30" class="input-weight w-full text-center bg-gray-50 border-2 border-black rounded-xl py-2 text-base font-black focus:outline-none focus:bg-purple-50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 transition-all"></div>
+                                <div class="flex-1"><input type="number" step="0.1" placeholder="0-10" class="input-score score-a w-full text-center bg-gray-50 border-2 border-black rounded-xl py-2 text-base font-black focus:outline-none focus:bg-purple-50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 transition-all"></div>
+                                <div class="flex-1"><input type="number" step="0.1" placeholder="0-10" class="input-score score-b w-full text-center bg-gray-50 border-2 border-black rounded-xl py-2 text-base font-black focus:outline-none focus:bg-purple-50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 transition-all"></div>
+                                <div class="flex-1 hidden option-c-col"><input type="number" step="0.1" placeholder="0-10" class="input-score score-c w-full text-center bg-gray-50 border-2 border-black rounded-xl py-2 text-base font-black focus:outline-none focus:bg-purple-50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 transition-all"></div>
+                                <div class="w-10 shrink-0 flex justify-center items-center"><div class="w-full h-[42px] border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50"></div></div>
+                            </div>
+                            <div class="flex gap-3 items-center dimension-row">
+                                <div class="label-dimension w-20 text-sm font-black text-black shrink-0">专属稀缺度</div>
+                                <div class="w-16 shrink-0"><input type="number" value="40" class="input-weight w-full text-center bg-gray-50 border-2 border-black rounded-xl py-2 text-base font-black focus:outline-none focus:bg-purple-50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 transition-all"></div>
+                                <div class="flex-1"><input type="number" step="0.1" placeholder="0-10" class="input-score score-a w-full text-center bg-gray-50 border-2 border-black rounded-xl py-2 text-base font-black focus:outline-none focus:bg-purple-50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 transition-all"></div>
+                                <div class="flex-1"><input type="number" step="0.1" placeholder="0-10" class="input-score score-b w-full text-center bg-gray-50 border-2 border-black rounded-xl py-2 text-base font-black focus:outline-none focus:bg-purple-50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 transition-all"></div>
+                                <div class="flex-1 hidden option-c-col"><input type="number" step="0.1" placeholder="0-10" class="input-score score-c w-full text-center bg-gray-50 border-2 border-black rounded-xl py-2 text-base font-black focus:outline-none focus:bg-purple-50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 transition-all"></div>
+                                <div class="w-10 shrink-0 flex justify-center items-center"><div class="w-full h-[42px] border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50"></div></div>
+                            </div>
+                            <div class="flex gap-3 items-center dimension-row">
+                                <div class="label-dimension w-20 text-sm font-black text-black shrink-0">情绪价值</div>
+                                <div class="w-16 shrink-0"><input type="number" value="30" class="input-weight w-full text-center bg-gray-50 border-2 border-black rounded-xl py-2 text-base font-black focus:outline-none focus:bg-purple-50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 transition-all"></div>
+                                <div class="flex-1"><input type="number" step="0.1" placeholder="0-10" class="input-score score-a w-full text-center bg-gray-50 border-2 border-black rounded-xl py-2 text-base font-black focus:outline-none focus:bg-purple-50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 transition-all"></div>
+                                <div class="flex-1"><input type="number" step="0.1" placeholder="0-10" class="input-score score-b w-full text-center bg-gray-50 border-2 border-black rounded-xl py-2 text-base font-black focus:outline-none focus:bg-purple-50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 transition-all"></div>
+                                <div class="flex-1 hidden option-c-col"><input type="number" step="0.1" placeholder="0-10" class="input-score score-c w-full text-center bg-gray-50 border-2 border-black rounded-xl py-2 text-base font-black focus:outline-none focus:bg-purple-50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 transition-all"></div>
+                                <div class="w-10 shrink-0 flex justify-center items-center"><div class="w-full h-[42px] border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50"></div></div>
+                            </div>
+                            <div class="flex gap-3 items-center dimension-row hidden" id="dimension-row-4">
+                                <div class="label-dimension w-20 text-sm font-black text-black shrink-0">冲动程度</div>
+                                <div class="w-16 shrink-0"><input type="number" value="0" class="input-weight w-full text-center bg-gray-50 border-2 border-black rounded-xl py-2 text-base font-black focus:outline-none focus:bg-purple-50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 transition-all"></div>
+                                <div class="flex-1"><input type="number" step="0.1" placeholder="0-10" class="input-score w-full text-center bg-gray-50 border-2 border-black rounded-xl py-2 text-base font-black focus:outline-none focus:bg-purple-50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 transition-all"></div>
+                                <div class="flex-1"><input type="number" step="0.1" placeholder="0-10" class="input-score w-full text-center bg-gray-50 border-2 border-black rounded-xl py-2 text-base font-black focus:outline-none focus:bg-purple-50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 transition-all"></div>
+                                <div class="flex-1 hidden option-c-col"><input type="number" step="0.1" placeholder="0-10" class="input-score w-full text-center bg-gray-50 border-2 border-black rounded-xl py-2 text-base font-black focus:outline-none focus:bg-purple-50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 transition-all"></div>
+                                <div class="w-10 shrink-0 flex justify-center items-center"><div class="w-full h-[42px] border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50"></div></div>
+                            </div>
+                        </div>
+                        
+                        <!-- 修复 1：给按钮加上一个包裹层 (mt-auto pt-8)，强制拉开 32px 的安全距离并沉底 -->
+                        <div class="mt-auto pt-8 w-full">
+                            <button id="btn-generate" class="w-full bg-purple-500 text-white border-4 border-black rounded-2xl py-4 text-lg font-black shadow-neo-lg hover:translate-y-1 hover:shadow-neo transition-all uppercase tracking-widest">
+                                生成决策雷达
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：雷达对比图区域 -->
+            <div class="w-full lg:w-[55%] flex flex-col relative">
+                
+                <h2 class="font-fredoka text-4xl font-black mb-5 tracking-wide uppercase">
+                    <span class="text-black">03.</span> <span class="text-blue-600">RESULT</span> 结果
+                </h2>
+                
+                <div class="bg-white border-4 border-black rounded-3xl shadow-neo-lg p-8 flex-1 flex flex-col relative z-10">
+                    
+                    <div class="absolute -top-6 right-0 bg-white border-2 border-black rounded-xl px-5 py-3 text-[20px] leading-relaxed font-black text-black shadow-neo z-30 transform rotate-2">
+                        💡 图表只看主观的原始打分，<br>加权后才是下面的综合得分👇
+                    </div>
+
+                   <!-- 修复 2：稍微收敛 scale 放大倍数 (1.15)，并微调下移距离，防止图例飞出 -->
+                   <div id="chart-container" class="flex-1 border-4 border-dashed border-black bg-gray-50 rounded-2xl transition-colors relative overflow-hidden min-h-[400px]">
+    
+                        <div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: radial-gradient(#000 2px, transparent 2px); background-size: 24px 24px;"></div>
+                        
+                        <div id="chart-placeholder" class="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
+                            <svg class="w-16 h-16 mb-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path>
+                            </svg>
+                            <p class="font-fredoka text-2xl font-black text-black uppercase">Radar Chart Here</p>
+                            <p class="text-lg font-bold mt-2">等待输入数据...</p>
+                        </div>
+
+                        <div class="absolute inset-0 z-20 flex items-center justify-center overflow-visible">
+                            <!-- CSS 暴力放大 1.15 倍，向下平移 4% -->
+                            <div class="w-full h-full transform scale-[1.15] translate-y-[4%]">
+                                <canvas id="radarChart" class="hidden w-full h-full"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex flex-col sm:flex-row gap-6 items-stretch relative z-10">
+                        
+                        <div class="flex-1 p-5 bg-lime-300 rounded-2xl border-4 border-black shadow-neo flex flex-col justify-center">
+                            <p id="result-sub-text" class="text-sm text-black font-black mb-1 uppercase">综合得分建议</p>
+                            <p id="result-winner-text" class="text-2xl font-fredoka font-black text-black">等待计算...</p>
+                        </div>
+
+                        <div class="w-full sm:w-64 bg-yellow-300 rounded-2xl border-4 border-black shadow-neo p-5 transform rotate-2 z-20 hover:rotate-0 hover:scale-105 transition-transform cursor-pointer relative shrink-0">
+                            <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-12 h-6 bg-white/50 border-2 border-black transform -rotate-2"></div>
+                            <p id="yellow-note-text" class="font-inter font-black text-lg leading-snug text-black mt-2">
+                                拯救内耗倒计时...<br>快在左边输入数据吧！🐱
+                            </p>
+                        </div>
+                        
+                    </div>
+                </div>
+
+                <div class="absolute -bottom-14 right-2 text-gray-500 text-base font-bold italic -rotate-2 z-0 opacity-80 pointer-events-none">
+                    Hazel 和 Gemini一起肘出来的
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ==========================================
+         核心逻辑与图表渲染 (JavaScript)
+         ========================================== -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+          // --- 分享功能激活咒语 ---
+const btnShare = document.getElementById('btn-share');
+if (btnShare) {
+    btnShare.addEventListener('click', async () => {
+        // 准备分享的数据
+        const shareData = {
+            title: '纠结打分器 | 拒绝内耗，逻辑拍板',
+            text: '我刚用这个超酷的波普风打分器做了一个决定，你也来试试？',
+            url: window.location.href // 自动抓取当前网页地址
+        };
+
+        try {
+            // 尝试调用系统原生分享 (手机端最爽)
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else {
+                // 电脑端或不支持 Share API 的浏览器：执行“复制到剪贴板”
+                await navigator.clipboard.writeText(window.location.href);
+                
+                // 弹出一个波普风的提示 (这里借用 alert，你也可以以后做成漂亮的 Toast)
+                alert("🔗 链接已复制到剪贴板，快去发给朋友吧！");
+            }
+        } catch (err) {
+            console.log('分享取消或失败', err);
+        }
+    });
+}
+            const sceneConfigs = {
+                '1': { 
+                    labels: ['视觉吸引力', '专属稀缺度', '情绪价值'], 
+                    activeColorClass: 'bg-pink-400', hoverColorClass: 'hover:bg-pink-400',
+                    explanation: '🎁 (手办、追星、游戏充值、谷子等)'
+                },
+                '2': { 
+                    labels: ['颜值与质感', '核心性能', '保值回血率'], 
+                    activeColorClass: 'bg-blue-400', hoverColorClass: 'hover:bg-blue-400',
+                    explanation: '💻 (手机数码、相机镜头、家用电器、高值首饰等)'
+                },
+                '3': { 
+                    labels: ['短期反馈感受', '长期回报', '消耗精力量'], 
+                    activeColorClass: 'bg-emerald-400', hoverColorClass: 'hover:bg-emerald-400',
+                    explanation: '📚 (教育报班、职业考证、技能培训、自律计划等)'
+                }
+            };
+
+            const sceneBtns = document.querySelectorAll('.scene-btn');
+            const weightInputs = document.querySelectorAll('.input-weight');
+            const scoreInputs = document.querySelectorAll('.input-score');
+            const weightTotalLabel = document.getElementById('weight-total-label');
+            const btnGenerate = document.getElementById('btn-generate');
+            const btnResets = document.querySelectorAll('.btn-reset');
+            const sceneExplanation = document.getElementById('scene-explanation');
+            
+            const btnToggleC = document.getElementById('btn-toggle-c');
+            const optionCCols = document.querySelectorAll('.option-c-col');
+            const iconPlus = document.getElementById('icon-plus');
+            const iconMinus = document.getElementById('icon-minus');
+            let isOptionCVisible = false;
+
+            let myRadarChart = null;
+
+            function switchScene(sceneId) {
+                const config = sceneConfigs[sceneId];
+                if (!config) return;
+
+                sceneBtns.forEach(btn => {
+                    btn.classList.remove('bg-pink-400', 'bg-blue-400', 'bg-emerald-400', 'bg-gray-100', 'font-black', 'font-bold', 'shadow-neo', 'transform', '-translate-y-1', 'hover:bg-pink-400', 'hover:bg-blue-400', 'hover:bg-emerald-400');
+                    if (btn.dataset.scene === sceneId) {
+                        btn.classList.add(config.activeColorClass, 'font-black', 'shadow-neo', 'transform', '-translate-y-1');
+                    } else {
+                        const targetConfig = sceneConfigs[btn.dataset.scene];
+                        btn.classList.add('bg-gray-100', 'font-bold', targetConfig.hoverColorClass, 'hover:shadow-neo', 'hover:-translate-y-1');
+                    }
+                });
+
+                const labels = document.querySelectorAll('.dimension-row:not(.hidden) .label-dimension');
+                for (let i = 0; i < 3; i++) {
+                    if (labels[i]) labels[i].textContent = config.labels[i];
+                }
+
+                if (sceneExplanation) {
+                    sceneExplanation.textContent = config.explanation;
+                }
+            }
+
+            sceneBtns.forEach(btn => btn.addEventListener('click', (e) => switchScene(e.target.dataset.scene)));
+
+            function calculateWeight() {
+                let total = 0;
+                for (let i = 0; i < 3; i++) {
+                    total += parseInt(weightInputs[i].value) || 0;
+                }
+
+                weightTotalLabel.textContent = `权重总和: ${total}%`;
+
+                if (total === 100) {
+                    weightTotalLabel.classList.remove('bg-red-400', 'text-white');
+                    weightTotalLabel.classList.add('bg-lime-400', 'text-black');
+                    btnGenerate.disabled = false;
+                    btnGenerate.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed', 'shadow-none', 'transform-none');
+                    btnGenerate.classList.add('bg-purple-500', 'text-white', 'hover:translate-y-1', 'hover:shadow-neo', 'shadow-neo-lg');
+                } else {
+                    weightTotalLabel.classList.remove('bg-lime-400', 'text-black');
+                    weightTotalLabel.classList.add('bg-red-400', 'text-white');
+                    btnGenerate.disabled = true;
+                    btnGenerate.classList.remove('bg-purple-500', 'text-white', 'hover:translate-y-1', 'hover:shadow-neo', 'shadow-neo-lg');
+                    btnGenerate.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed', 'shadow-none', 'transform-none');
+                }
+            }
+
+            weightInputs.forEach((input, index) => {
+                if(index < 3) input.addEventListener('input', calculateWeight);
+            });
+
+            scoreInputs.forEach(input => {
+                input.addEventListener('input', (e) => {
+                    e.target.classList.remove('!border-red-500', '!bg-red-100', 'placeholder-red-400');
+                    if (e.target.value === '') return;
+                    let val = parseFloat(e.target.value);
+                    if (val > 10) e.target.value = 10;
+                    if (val < 0) e.target.value = 0;
+                    if (e.target.value.includes('.')) {
+                        let parts = e.target.value.split('.');
+                        if (parts[1].length > 1) {
+                            e.target.value = parseFloat(val).toFixed(1);
+                        }
+                    }
+                });
+            });
+
+            btnToggleC.addEventListener('click', () => {
+                isOptionCVisible = !isOptionCVisible;
+                if (isOptionCVisible) {
+                    optionCCols.forEach(col => col.classList.remove('hidden'));
+                    iconPlus.classList.add('hidden');
+                    iconMinus.classList.remove('hidden');
+                    btnToggleC.classList.remove('text-gray-400', 'hover:bg-lime-300', 'border-gray-400');
+                    btnToggleC.classList.add('text-black', 'hover:bg-red-400', 'bg-gray-200', 'border-black');
+                } else {
+                    optionCCols.forEach(col => {
+                        col.classList.add('hidden');
+                        const input = col.querySelector('input');
+                        if (input) {
+                            input.value = '';
+                            input.classList.remove('!border-red-500', '!bg-red-100', 'placeholder-red-400');
+                        }
+                    });
+                    iconPlus.classList.remove('hidden');
+                    iconMinus.classList.add('hidden');
+                    btnToggleC.classList.remove('text-black', 'hover:bg-red-400', 'bg-gray-200', 'border-black');
+                    btnToggleC.classList.add('text-gray-400', 'hover:bg-lime-300', 'border-gray-400');
+                }
+            });
+
+            btnGenerate.addEventListener('click', () => {
+                if (btnGenerate.disabled) return;
+
+                let isValid = true;
+                const activeRows = document.querySelectorAll('.dimension-row:not(.hidden)');
+                const dimensions = [];
+                const scoresA = [], scoresB = [], scoresC = [];
+                const weights = [];
+
+                activeRows.forEach(row => {
+                    dimensions.push(row.querySelector('.label-dimension').textContent);
+                    weights.push(parseFloat(row.querySelector('.input-weight').value) / 100);
+                    
+                    const sA = row.querySelector('.score-a');
+                    const sB = row.querySelector('.score-b');
+                    const sC = row.querySelector('.score-c');
+
+                    [sA, sB].forEach(input => {
+                        if (input.value === '') { isValid = false; input.classList.add('!border-red-500', '!bg-red-100', 'placeholder-red-400'); }
+                    });
+                    if (isOptionCVisible && sC.value === '') {
+                        isValid = false; sC.classList.add('!border-red-500', '!bg-red-100', 'placeholder-red-400');
+                    }
+
+                    scoresA.push(parseFloat(sA.value) || 0);
+                    scoresB.push(parseFloat(sB.value) || 0);
+                    if (isOptionCVisible) scoresC.push(parseFloat(sC.value) || 0);
+                });
+
+                if (!isValid) return;
+
+                const nameA = document.getElementById('name-a').value || '选项 A';
+                const nameB = document.getElementById('name-b').value || '选项 B';
+                const nameC = document.getElementById('name-c').value || '选项 C';
+
+                let totalA = 0, totalB = 0, totalC = 0;
+                for (let i = 0; i < 3; i++) {
+                    totalA += scoresA[i] * weights[i];
+                    totalB += scoresB[i] * weights[i];
+                    if (isOptionCVisible) totalC += scoresC[i] * weights[i];
+                }
+
+                document.getElementById('chart-placeholder').classList.add('hidden');
+                const canvas = document.getElementById('radarChart');
+                canvas.classList.remove('hidden');
+
+                if (myRadarChart) myRadarChart.destroy();
+
+                const datasets = [
+                    {
+                        label: nameA,
+                        data: scoresA,
+                        backgroundColor: 'rgba(255, 51, 102, 0.4)',
+                        borderColor: '#FF3366',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#FF3366',
+                        pointBorderColor: '#000',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                    },
+                    {
+                        label: nameB,
+                        data: scoresB,
+                        backgroundColor: 'rgba(0, 255, 255, 0.4)',
+                        borderColor: '#00FFFF',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#00FFFF',
+                        pointBorderColor: '#000',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                    }
+                ];
+
+                if (isOptionCVisible) {
+                    datasets.push({
+                        label: nameC,
+                        data: scoresC,
+                        backgroundColor: 'rgba(204, 255, 0, 0.4)',
+                        borderColor: '#CCFF00',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#CCFF00',
+                        pointBorderColor: '#000',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                    });
+                }
+
+                // 修复 3：配合 CSS 的 1.15 倍缩放，在 JS 中给顶部加一点 padding 把图例推回框内
+                myRadarChart = new Chart(canvas, {
+                    type: 'radar',
+                    data: { labels: dimensions, datasets: datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: {
+                            // 顶部留出 24px 空间，防止放大后图例被切掉
+                            padding: { top: 24, bottom: 0, left: 45, right: 0} 
+                        },
+                        scales: {
+                            r: {
+                                min: 0,
+                                max: 10,
+                                ticks: { display: false }, 
+                                pointLabels: { 
+                                    padding: 0, 
+                                    font: { size: 15, weight: '900', family: 'Inter' }, 
+                                    color: '#000' 
+                                },
+                                grid: { color: '#000', borderDash: [5, 5], lineWidth: 1.5 },
+                                angleLines: { color: '#000', borderDash: [5, 5], lineWidth: 1.5 }
+                            }
+                        },
+                        plugins: {
+                            legend: { 
+                                position: 'top', 
+                                align: 'start', 
+                                labels: { 
+                                    boxWidth: 16, // 图例方块
+                                    font: { family: 'Inter', size: 14, weight: 'bold' }, // 图例文字
+                                    padding: 15 
+                                } 
+                            }
+                        }
+                    }
+                });
+
+                const results = [
+                    { name: nameA, score: totalA },
+                    { name: nameB, score: totalB }
+                ];
+                if (isOptionCVisible) results.push({ name: nameC, score: totalC });
+
+                results.sort((a, b) => b.score - a.score);
+
+                const winner = results[0];
+                const runnerUp = results[1];
+                const diff = Math.abs(winner.score - runnerUp.score);
+
+                const greenSubText = document.getElementById('result-sub-text');
+                const greenWinnerText = document.getElementById('result-winner-text');
+                const yellowNoteText = document.getElementById('yellow-note-text');
+
+                if (diff >= 0.8) {
+                    greenSubText.textContent = '综合得分建议';
+                    greenWinnerText.innerHTML = `🏆 毫无悬念！<span class="text-indigo-600">${winner.name}</span> 以 ${diff.toFixed(1)} 分绝对优势碾压！`;
+                    yellowNoteText.innerHTML = '这波稳啦！<br>关掉页面，现在立刻去下单吧！🛒';
+                } else if (diff >= 0.3 && diff < 0.8) {
+                    greenSubText.textContent = '综合得分建议';
+                    greenWinnerText.innerHTML = `🏆 听数据的！最终赢家：<span class="text-indigo-600">${winner.name}</span>（总分：${winner.score.toFixed(1)}）`;
+                    yellowNoteText.innerHTML = '心选商品！<br>就选它，绝对不亏！';
+                } else {
+                    greenSubText.textContent = '综合得分建议';
+                    greenWinnerText.innerHTML = `⚖️ 难分伯仲！<span class="text-indigo-600">${winner.name}</span> 险胜（总分：${winner.score.toFixed(1)}）`;
+                    yellowNoteText.innerHTML = '“抛硬币决定的瞬间，<br>你心里已经有答案了。🪙”';
+                }
+                
+            });
+
+            function resetAll() {
+                if(weightInputs[0]) weightInputs[0].value = 30;
+                if(weightInputs[1]) weightInputs[1].value = 40;
+                if(weightInputs[2]) weightInputs[2].value = 30;
+
+                scoreInputs.forEach(input => {
+                    input.value = '';
+                    input.classList.remove('!border-red-500', '!bg-red-100', 'placeholder-red-400');
+                });
+                document.querySelectorAll('.input-option-name').forEach(input => input.value = '');
+
+                if (isOptionCVisible) btnToggleC.click();
+                
+                document.getElementById('chart-placeholder').classList.remove('hidden');
+                document.getElementById('radarChart').classList.add('hidden');
+                if (myRadarChart) { myRadarChart.destroy(); myRadarChart = null; }
+
+                document.getElementById('result-winner-text').textContent = '等待计算...';
+                document.getElementById('result-sub-text').textContent = '综合得分建议';
+                document.getElementById('yellow-note-text').innerHTML = '拯救内耗倒计时...<br>快在左边输入数据吧！🐱';
+
+                switchScene('1');
+                calculateWeight();
+            }
+
+            btnResets.forEach(btn => btn.addEventListener('click', resetAll));
+
+            const row4 = document.getElementById('dimension-row-4');
+            if(row4) row4.classList.add('hidden');
+            switchScene('1');
+            calculateWeight();
+        });
+    </script>
+</body>
+</html>
+    
+  </body>
+  
+</html>
